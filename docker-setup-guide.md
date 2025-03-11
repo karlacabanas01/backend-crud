@@ -4,6 +4,11 @@ Esta guía documenta los pasos para detener, limpiar y volver a levantar el ento
 
 Estos comandos deben ser ejecutados en la ruta del proyecto backend.
 
+## Levantar la red compartida
+```bash
+docker network create nabi-network
+```
+
 ## **🔹 Paso 1: Detener y eliminar todos los contenedores**
 
 Antes de reiniciar el entorno, es importante detener los contenedores en ejecución.

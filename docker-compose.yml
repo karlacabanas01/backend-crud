@@ -11,32 +11,12 @@ services:
       - NODE_ENV=development
     env_file:
       - .env
-    depends_on:
-      - mysql
     volumes:
       - .:/app
       - /app/node_modules
-  mysql:
-    image: mysql:8.0
-    container_name: nabi_mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: nabi_db
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+    - nabi-network
 
-  adminer:
-    image: adminer
-    container_name: mi-adminer
-    restart: always
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mysql
-
-volumes:
-  mysql_data:
+networks:
+  nabi-network:
+    external: true
