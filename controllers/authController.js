@@ -3,77 +3,91 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 exports.createUser = async (req, res) => {
-  console.log("🔍 Datos recibidos en el backend:", req.body.email);
+  try {
+    console.log("🔍 Datos recibidos en el backend:", req.body);
 
-  const { username, email, password } = req.body;
+    const { username, email, password } = req.body;
 
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: "Todos los campos son obligatorios" });
-  }
-
-  if (username.length < 3) {
-    return res
-      .status(400)
-      .json({ error: "El nombre de usuario debe tener al menos 3 caracteres" });
-  }
-
-  // Expresión regular para validar correo electrónico
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res
-      .status(400)
-      .json({ error: "El correo electrónico no es válido" });
-  }
-
-  // Expresión regular para validar contraseña (mínimo 8 caracteres, una mayúscula, un número y un carácter especial)
-  const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-  if (!passwordRegex.test(password)) {
-    return res.status(400).json({
-      error:
-        "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial",
-    });
-  }
-
-  // **🛑 Verificar si el correo ya está registrado**
-  const checkEmailQuery = "SELECT * FROM users WHERE email = ?";
-  db.query(checkEmailQuery, [email], async (err, results) => {
-    if (err) {
-      console.error("❌ Error al verificar el correo:", err);
-      return res.status(500).json({ error: "Error en el servidor" });
+    // ✅ 1.2.1 Validar que los campos requeridos sean proporcionados
+    if (!username || !email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Todos los campos son obligatorios" });
     }
 
-    if (results.length > 0) {
+    // ✅ 1.2.2 Validar que solo sean nombres (sin números ni caracteres especiales)
+    const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+    if (!nameRegex.test(username)) {
+      return res
+        .status(400)
+        .json({ error: "El nombre de usuario solo debe contener letras" });
+    }
+
+    // ✅ 1.2.3 No permitir que se ingrese solo un espacio o espacios en blanco
+    if (username.trim().length === 0) {
+      return res.status(400).json({
+        error:
+          "El nombre de usuario no puede estar vacío o solo contener espacios",
+      });
+    }
+
+    // ✅ 1.2.4 No permitir que el nombre de usuario parezca un correo electrónico
+    if (username.includes("@")) {
+      return res
+        .status(400)
+        .json({ error: "El nombre de usuario no puede contener @" });
+    }
+
+    // ✅ Validar correo electrónico con regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res
+        .status(400)
+        .json({ error: "El correo electrónico no es válido" });
+    }
+
+    // ✅ 1.2.6 Validar contraseña según estándares NIST y OWASP
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        error:
+          "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial",
+      });
+    }
+
+    // ✅ 1.2.5 Verificar si el correo ya está registrado
+    const checkEmailQuery = "SELECT * FROM users WHERE email = ?";
+    const [existingUsers] = await db.query(checkEmailQuery, [email]);
+
+    if (existingUsers.length > 0) {
       return res.status(409).json({ error: "El correo ya está registrado" });
     }
 
-    try {
-      // **🔐 Encriptar la contraseña antes de guardarla**
-      const hashedPassword = await bcrypt.hash(password, 10);
+    // 🔐 Encriptar la contraseña antes de guardarla
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-      const insertQuery =
-        "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-      db.query(
-        insertQuery,
-        [username, email, hashedPassword],
-        (err, result) => {
-          if (err) {
-            console.error("❌ Error al crear el usuario en la BD:", err);
-            return res.status(500).json({ error: "Error al crear el usuario" });
-          }
+    // Insertar usuario en la base de datos
+    const insertQuery =
+      "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+    const [result] = await db.query(insertQuery, [
+      username,
+      email,
+      hashedPassword,
+    ]);
 
-          console.log("✅ Usuario creado con éxito:", {
-            id: result.insertId,
-            username,
-            email,
-          });
-          res.status(201).json({ id: result.insertId, username, email });
-        }
-      );
-    } catch (error) {
-      console.error("❌ Error al hashear la contraseña:", error);
-      return res.status(500).json({ error: "Error al procesar la contraseña" });
-    }
-  });
+    console.log("✅ Usuario creado con éxito:", {
+      id: result.insertId,
+      username,
+      email,
+    });
+
+    res.status(201).json({ id: result.insertId, username, email });
+  } catch (error) {
+    console.error("❌ Error en el backend:", error.message);
+    res
+      .status(500)
+      .json({ error: "Error en el servidor", details: error.message });
+  }
 };
 
 exports.login = async (req, res) => {
@@ -135,6 +149,30 @@ exports.getUsers = (req, res) => {
     }
     res.json(results);
   });
+};
+exports.getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id?.trim();
+
+    if (!userId || isNaN(userId) || parseInt(userId, 10) <= 0) {
+      return res.status(400).json({ error: "ID de usuario no válido" });
+    }
+
+    const [results] = await db.query("SELECT * FROM users WHERE id = ?", [
+      parseInt(userId, 10),
+    ]);
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json(results[0]);
+  } catch (error) {
+    console.error("Error al obtener el usuario:", error.message);
+    res
+      .status(500)
+      .json({ error: "Error en el servidor", details: error.message });
+  }
 };
 
 exports.updateUser = (req, res) => {
@@ -210,13 +248,27 @@ exports.updateUser = (req, res) => {
   });
 };
 
-exports.deleteUser = (req, res) => {
-  const { id } = req.params;
-  const index = users.findIndex((u) => u.id == id);
-  if (index !== -1) {
-    users.splice(index, 1);
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id, 10);
+
+    if (isNaN(userId) || userId <= 0) {
+      return res.status(400).json({ error: "ID de usuario no válido" });
+    }
+
+    const [rows] = await db.query("SELECT * FROM users WHERE id = ?", [userId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    await db.query("DELETE FROM users WHERE id = ?", [userId]);
+
     res.json({ message: "Usuario eliminado exitosamente" });
-  } else {
-    res.status(404).json({ error: "Usuario no encontrado" });
+  } catch (error) {
+    console.error("Error eliminando usuario:", error.message);
+    res
+      .status(500)
+      .json({ error: "Error interno del servidor", details: error.message });
   }
 };
