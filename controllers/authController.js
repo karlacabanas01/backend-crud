@@ -8,14 +8,12 @@ exports.createUser = async (req, res) => {
 
     const { username, email, password } = req.body;
 
-    // ✅ 1.2.1 Validar que los campos requeridos sean proporcionados
     if (!username || !email || !password) {
       return res
         .status(400)
         .json({ error: "Todos los campos son obligatorios" });
     }
 
-    // ✅ 1.2.2 Validar que solo sean nombres (sin números ni caracteres especiales)
     const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
     if (!nameRegex.test(username)) {
       return res
@@ -23,7 +21,6 @@ exports.createUser = async (req, res) => {
         .json({ error: "El nombre de usuario solo debe contener letras" });
     }
 
-    // ✅ 1.2.3 No permitir que se ingrese solo un espacio o espacios en blanco
     if (username.trim().length === 0) {
       return res.status(400).json({
         error:
@@ -31,14 +28,12 @@ exports.createUser = async (req, res) => {
       });
     }
 
-    // ✅ 1.2.4 No permitir que el nombre de usuario parezca un correo electrónico
     if (username.includes("@")) {
       return res
         .status(400)
         .json({ error: "El nombre de usuario no puede contener @" });
     }
 
-    // ✅ Validar correo electrónico con regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res
@@ -46,7 +41,6 @@ exports.createUser = async (req, res) => {
         .json({ error: "El correo electrónico no es válido" });
     }
 
-    // ✅ 1.2.6 Validar contraseña según estándares NIST y OWASP
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
     if (!passwordRegex.test(password)) {
       return res.status(400).json({
@@ -55,7 +49,6 @@ exports.createUser = async (req, res) => {
       });
     }
 
-    // ✅ 1.2.5 Verificar si el correo ya está registrado
     const checkEmailQuery = "SELECT * FROM users WHERE email = ?";
     const [existingUsers] = await db.query(checkEmailQuery, [email]);
 
@@ -63,10 +56,8 @@ exports.createUser = async (req, res) => {
       return res.status(409).json({ error: "El correo ya está registrado" });
     }
 
-    // 🔐 Encriptar la contraseña antes de guardarla
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insertar usuario en la base de datos
     const insertQuery =
       "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
     const [result] = await db.query(insertQuery, [
@@ -198,7 +189,6 @@ exports.updateUser = (req, res) => {
       .json({ error: "El correo electrónico no es válido" });
   }
 
-  // **🛑 Verificar si el usuario existe**
   const checkUserQuery = "SELECT * FROM users WHERE id = ?";
   db.query(checkUserQuery, [id], (err, results) => {
     if (err) {
@@ -210,7 +200,6 @@ exports.updateUser = (req, res) => {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    // **📝 Construcción dinámica del query**
     const updateFields = [];
     const updateValues = [];
 

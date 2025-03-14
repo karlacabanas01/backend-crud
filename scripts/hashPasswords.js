@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const connection = require("../config/db"); // Asegúrate de que la ruta sea correcta
+const connection = require("../config/db");
 
 async function hashPasswords() {
   try {
