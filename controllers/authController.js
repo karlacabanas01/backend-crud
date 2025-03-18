@@ -165,8 +165,7 @@ exports.getUserById = async (req, res) => {
       .json({ error: "Error en el servidor", details: error.message });
   }
 };
-
-exports.updateUser = (req, res) => {
+exports.updateUserById = (req, res) => {
   const { id } = req.params;
   const { username, email } = req.body;
 
@@ -189,6 +188,7 @@ exports.updateUser = (req, res) => {
       .json({ error: "El correo electrónico no es válido" });
   }
 
+  // Verificar si el usuario existe
   const checkUserQuery = "SELECT * FROM users WHERE id = ?";
   db.query(checkUserQuery, [id], (err, results) => {
     if (err) {
@@ -236,15 +236,8 @@ exports.updateUser = (req, res) => {
     });
   });
 };
-
-exports.deleteUser = async (req, res) => {
+exports.deleteUserById = async (req, res) => {
   try {
-    const userId = parseInt(req.params.id, 10);
-
-    if (isNaN(userId) || userId <= 0) {
-      return res.status(400).json({ error: "ID de usuario no válido" });
-    }
-
     const [rows] = await db.query("SELECT * FROM users WHERE id = ?", [userId]);
 
     if (rows.length === 0) {
@@ -255,9 +248,7 @@ exports.deleteUser = async (req, res) => {
 
     res.json({ message: "Usuario eliminado exitosamente" });
   } catch (error) {
-    console.error("Error eliminando usuario:", error.message);
-    res
-      .status(500)
-      .json({ error: "Error interno del servidor", details: error.message });
+    console.error("Error al eliminar usuario:", error);
+    res.status(500).json({ error: "Error en el servidor" });
   }
 };
