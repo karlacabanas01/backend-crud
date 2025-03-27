@@ -2,7 +2,7 @@ const db = require("../config/db");
 
 exports.getProducts = (req, res) => {
   console.log("🔍 req.user:", req.user);
-  const userId = req.user.id; // El user_id debe estar disponible en req.user
+  const userId = req.user.id;
 
   if (!userId) {
     return res.status(401).json({ error: "Usuario no autenticado" });
@@ -36,7 +36,7 @@ exports.createProduct = (req, res) => {
       console.error("Error al agregar producto:", err);
       return res.status(500).json({ error: "Error en el servidor" });
     }
-    res.status(201).json({ message: "Producto agregado correctamente" });
+    return res.status(201).json({ message: "Producto agregado correctamente" });
   });
 };
 
@@ -52,7 +52,7 @@ exports.updateProduct = (req, res) => {
       console.error("Error al actualizar producto:", err);
       return res.status(500).json({ error: "Error en el servidor" });
     }
-    res.json({ message: "Producto actualizado exitosamente" });
+    return res.json({ message: "Producto actualizado exitosamente" });
   });
 };
 
@@ -66,6 +66,9 @@ exports.deleteProduct = (req, res) => {
       console.error("Error al eliminar producto:", err);
       return res.status(500).json({ error: "Error en el servidor" });
     }
-    res.json({ message: "Producto eliminado exitosamente" });
+
+    return res
+      .status(200)
+      .json({ mensaje: "Producto eliminado correctamente" });
   });
 };

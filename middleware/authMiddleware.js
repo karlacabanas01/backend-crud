@@ -4,9 +4,7 @@ const authenticateUser = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ error: "Acceso no autorizado - Token no proporcionado" });
+    return res.status(401).json({ error: "No autorizado" });
   }
   const token = authHeader.split(" ")[1];
 
@@ -21,7 +19,7 @@ const authenticateUser = (req, res, next) => {
         .status(403)
         .json({ error: "Token inválido - No contiene user_id" });
     }
-    req.user = decoded; // Asigna el usuario al request
+    req.user = decoded;
 
     next();
   } catch (error) {
