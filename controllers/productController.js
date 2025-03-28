@@ -16,7 +16,7 @@ exports.getProducts = (req, res) => {
       return res.status(500).json({ error: "Error en el servidor" });
     }
 
-    res.json(results);
+    return res.json(results);
   });
 };
 
@@ -31,7 +31,7 @@ exports.createProduct = (req, res) => {
 
   const query =
     "INSERT INTO products (name, description, price, user_id) VALUES (?, ?, ?, ?)";
-  db.query(query, [name, description, price, userId], (err, result) => {
+  db.query(query, [name, description, price, userId], (err) => {
     if (err) {
       console.error("Error al agregar producto:", err);
       return res.status(500).json({ error: "Error en el servidor" });
@@ -47,7 +47,7 @@ exports.updateProduct = (req, res) => {
   const query =
     "UPDATE products SET name = ?, description = ?, price = ? WHERE id = ?";
 
-  db.query(query, [name, description, price, id], (err, result) => {
+  db.query(query, [name, description, price, id], (err) => {
     if (err) {
       console.error("Error al actualizar producto:", err);
       return res.status(500).json({ error: "Error en el servidor" });
@@ -61,7 +61,7 @@ exports.deleteProduct = (req, res) => {
   const { id } = req.params;
   const query = "DELETE FROM products WHERE id = ?";
 
-  db.query(query, [id], (err, result) => {
+  db.query(query, [id], (err) => {
     if (err) {
       console.error("Error al eliminar producto:", err);
       return res.status(500).json({ error: "Error en el servidor" });
