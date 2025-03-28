@@ -6,6 +6,7 @@ const authenticateUser = (req, res, next) => {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "No autorizado" });
   }
+
   const token = authHeader.split(" ")[1];
 
   try {
@@ -21,7 +22,7 @@ const authenticateUser = (req, res, next) => {
     }
     req.user = decoded;
 
-    next();
+    return next();
   } catch (error) {
     console.error("Error en autenticación:", error);
     res.status(403).json({ error: "Token inválido" });

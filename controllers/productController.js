@@ -67,8 +67,6 @@ exports.deleteProduct = (req, res) => {
       return res.status(500).json({ error: "Error en el servidor" });
     }
 
-    return res
-      .status(200)
-      .json({ mensaje: "Producto eliminado correctamente" });
+    return res.status(200).json({ message: "Producto eliminado con éxito" });
   });
 };
