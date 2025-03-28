@@ -52,11 +52,9 @@ exports.createUser = async (req, res) => {
       [username, email, hashedPassword]
     );
 
-    console.log("✅ Usuario creado:", { id: result.insertId, username, email });
-    res.status(201).json({ id: result.insertId, username, email });
+    return res.status(201).json({ id: result.insertId, username, email });
   } catch (error) {
-    console.error("❌ Error en el backend:", error.message);
-    res
+    return res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
   }
@@ -74,7 +72,6 @@ exports.login = async (req, res) => {
         .json({ error: "Email y contraseña son obligatorios" });
     }
 
-    // ✅ Usando await en vez de callback
     const [results] = await db.query("SELECT * FROM users WHERE email = ?", [
       email,
     ]);
@@ -96,13 +93,12 @@ exports.login = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.json({
+    return res.json({
       user: { id: user.id, username: user.username, email: user.email },
       token,
     });
   } catch (error) {
-    console.error("❌ Error en el login:", error.message);
-    res
+    return res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
   }
@@ -153,10 +149,9 @@ exports.updateUserById = async (req, res) => {
     )} WHERE id = ?`;
 
     await db.query(updateQuery, updateValues);
-    res.json({ message: "Usuario actualizado con éxito" });
+    return res.json({ message: "Usuario actualizado con éxito" });
   } catch (error) {
-    console.error("❌ Error al actualizar usuario:", error.message);
-    res
+    return res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
   }
@@ -177,10 +172,9 @@ exports.deleteUserById = async (req, res) => {
 
     await db.query("DELETE FROM users WHERE id = ?", [userId]);
 
-    res.json({ message: "Usuario eliminado exitosamente" });
+    return res.json({ message: "Usuario eliminado exitosamente" });
   } catch (error) {
-    console.error("❌ Error al eliminar usuario:", error.message);
-    res
+    return res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
   }
@@ -189,10 +183,9 @@ exports.deleteUserById = async (req, res) => {
 exports.getUsers = async (req, res) => {
   try {
     const [results] = await db.query("SELECT * FROM users"); // ✅ Usando await
-    res.json(results);
+    return res.json(results);
   } catch (error) {
-    console.error("❌ Error al obtener usuarios:", error.message);
-    res
+    return res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
   }
@@ -216,8 +209,7 @@ exports.getUserById = async (req, res) => {
 
     return res.json(results[0]);
   } catch (error) {
-    console.error("❌ Error al obtener el usuario:", error.message);
-    res
+    return res
       .status(500)
       .json({ error: "Error en el servidor", details: error.message });
   }
