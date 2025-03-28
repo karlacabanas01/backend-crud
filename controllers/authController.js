@@ -93,7 +93,7 @@ exports.login = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.json({
+    return res.json({
       user: { id: user.id, username: user.username, email: user.email },
       token,
     });
@@ -183,7 +183,7 @@ exports.deleteUserById = async (req, res) => {
 exports.getUsers = async (req, res) => {
   try {
     const [results] = await db.query("SELECT * FROM users"); // ✅ Usando await
-    res.json(results);
+    return res.json(results);
   } catch (error) {
     return res
       .status(500)
